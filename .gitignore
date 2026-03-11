@@ -1,0 +1,30 @@
+# Environment variables
+.env
+.env.example
+.env*.local
+
+# Production
+dist
+dist-ssr
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Temporary files
+.tmp/
+scripts/*.mjs
+directivas/
+
+# Editor directories and files
+node_modules
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
