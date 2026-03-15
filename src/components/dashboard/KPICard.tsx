@@ -1,11 +1,17 @@
+import React from "react";
+import { Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 interface KPICardProps {
-  label: string;
-  value: string;
-  sparkData: readonly number[];
+  label: React.ReactNode;
+  value: string | number;
+  sparkData?: readonly number[];
   accentColor?: string;
+  tooltipInfo?: string;
 }
 
 function MiniSparkline({ data, color }: { data: readonly number[]; color: string }) {
+  if (!data || data.length === 0) return null;
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min || 1;
@@ -38,11 +44,25 @@ function MiniSparkline({ data, color }: { data: readonly number[]; color: string
   );
 }
 
-export function KPICard({ label, value, sparkData, accentColor = "hsl(var(--primary))" }: KPICardProps) {
+export function KPICard({ label, value, sparkData = [], accentColor = "hsl(var(--primary))", tooltipInfo }: KPICardProps) {
   return (
     <div className="relative overflow-hidden bg-card rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 flex flex-col justify-between min-h-[120px]">
-      <span className="text-sm font-body text-muted-foreground">{label}</span>
-      <span className="text-right font-display text-3xl font-bold tracking-tight text-foreground">
+      <div className="flex items-start justify-between gap-2">
+        <span className="text-sm font-body text-muted-foreground">{label}</span>
+        {tooltipInfo && (
+          <TooltipProvider>
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger type="button" className="cursor-help text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                <Info className="w-4 h-4" />
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p className="max-w-xs">{tooltipInfo}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </div>
+      <span className="text-right font-display text-4xl font-bold tracking-tight text-foreground mt-4">
         {value}
       </span>
       <MiniSparkline data={sparkData} color={accentColor} />

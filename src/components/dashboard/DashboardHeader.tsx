@@ -39,10 +39,8 @@ export function DashboardHeader({ currentPeriod, onPeriodChange }: DashboardHead
             <button 
               className="inline-flex items-center gap-1 text-primary font-medium hover:underline capitalize"
               onClick={() => {
-                // Alternar entre los dos periodos conocidos para prueba rápida si no hay un dropdown real
-                if (onPeriodChange) {
-                  onPeriodChange(currentPeriod === '2026-03-09' ? '2025-03-01' : '2026-03-09');
-                }
+                // Aquí en el futuro se abrirá un Dropdown para seleccionar el mes.
+                // Por ahora no cambia de fecha ya que solo se ven meses a partir de marzo 2026.
               }}
             >
               {formatPeriod(currentPeriod)}

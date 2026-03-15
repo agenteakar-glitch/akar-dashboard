@@ -1,33 +1,65 @@
+import React, { useMemo } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DonutChartProps {
   title: string;
   data: readonly { readonly canal?: string; readonly tipo?: string; readonly valor: number; readonly color: string }[];
-  centerValue: string;
+  centerValue: string | number;
   centerLabel: string;
   onHoverSegment?: (index: number | null) => void;
+  tooltipInfo?: string;
 }
 
-export function DonutChart({ title, data, centerValue, centerLabel, onHoverSegment }: DonutChartProps) {
+export function DonutChart({ title, data, centerValue, centerLabel, onHoverSegment, tooltipInfo }: DonutChartProps) {
+  const isAllZeroes = data.every(d => Number(d.valor) === 0);
+  
+  const chartData = useMemo(() => {
+    if (isAllZeroes) {
+      return [{ valor: 1, color: "#e2e8f0" }]; // color muted fijo
+    }
+    return data.map(d => ({ ...d, valor: Number(d.valor) }));
+  }, [data, isAllZeroes]);
+
   return (
     <div className="bg-card rounded-2xl shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col">
-      <h3 className="font-display text-sm font-semibold text-foreground mb-4">{title}</h3>
-      <div className="relative flex-1 min-h-[200px]">
+      <div className="flex items-start justify-between gap-2 mb-4">
+        <h3 className="font-display text-sm font-semibold text-foreground">{title}</h3>
+        {tooltipInfo && (
+          <TooltipProvider>
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger type="button" className="cursor-help text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                <Info className="w-4 h-4" />
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p className="max-w-xs">{tooltipInfo}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </div>
+      <div className="relative w-full h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={data as any[]}
+              data={chartData}
               dataKey="valor"
               cx="50%"
               cy="50%"
               innerRadius="70%"
               outerRadius="90%"
               strokeWidth={0}
-              onMouseEnter={(_, index) => onHoverSegment?.(index)}
+              onMouseEnter={(_, index) => onHoverSegment?.(!isAllZeroes ? index : null)}
               onMouseLeave={() => onHoverSegment?.(null)}
+              isAnimationActive={!isAllZeroes}
             >
-              {data.map((entry, i) => (
-                <Cell key={i} fill={entry.color} className="transition-opacity duration-200 hover:opacity-80 cursor-pointer" />
+              {chartData.map((entry, i) => (
+                <Cell 
+                  key={`cell-${i}`} 
+                  fill={entry.color} 
+                  className={isAllZeroes ? "" : "transition-opacity duration-200 hover:opacity-80 cursor-pointer"} 
+                />
               ))}
             </Pie>
           </PieChart>

@@ -50,38 +50,75 @@ export const useDashboardData = (periodo: string = '2025-03-01') => {
 
       const d = dashboard as DashboardRow | null;
 
-      // Procesar cálculos (según contexto.txt) con valores por defecto
+      // Extraer campos nuevos y antiguos con valores por defecto
       const consultas_whatsapp = d?.consultas_whatsapp || 0;
       const consultas_instagram = d?.consultas_instagram || 0;
       const consultas_messenger = d?.consultas_messenger || 0;
       const derivaciones_totales = d?.derivaciones_totales || 0;
-      const derivaciones_por_ia = d?.derivaciones_por_ia || 0;
       const leads_perdidos_ia = d?.leads_perdidos_ia || 0;
+      const leads_perdidos_vendedor = d?.leads_perdidos_vendedor || 0;
+      const derivacion_primer_seguimientoIA = d?.derivacion_primer_seguimientoIA || 0;
+      const derivacion_segundo_seguimientoIA = d?.derivacion_segundo_seguimientoIA || 0;
+      const lead_recibidos_ia = d?.lead_recibidos_ia || 0;
 
-      const consultas_totales = consultas_whatsapp + consultas_instagram + consultas_messenger;
-      const derivaciones_manuales = derivaciones_totales - derivaciones_por_ia;
+      // Nuevas métricas
+      // 1. Total leads marcados con etiqueta perdidos
+      const total_leads_perdidos = leads_perdidos_ia + leads_perdidos_vendedor;
       
-      const porcentaje_conversion = consultas_totales > 0 
-        ? parseFloat(((derivaciones_totales / consultas_totales) * 100).toFixed(2)) 
+      // 2. Leads recibidos en el mes
+      const leads_recibidos = lead_recibidos_ia;
+
+      // 3. Tasa de conversión (leads atendidos vs derivaciones)
+      const leads_atendidos = leads_recibidos; // Consideramos "atendidos" al total de recibidos
+      const porcentaje_conversion = leads_atendidos > 0 
+        ? parseFloat(((derivaciones_totales / leads_atendidos) * 100).toFixed(2)) 
         : 0;
+        
+      // Recuperar IA vs Manual
+      const derivaciones_por_ia = d?.derivaciones_por_ia || 0;
+      const derivaciones_manuales = derivaciones_totales - derivaciones_por_ia;
+
+      // 9. Métricas de vendedores: mostrar una sola vez con promedios
+      type GroupedVendedor = VendedorRow & { count: number };
+      const vMap: Record<string, GroupedVendedor> = {};
+      (vendedores || []).forEach(v => {
+        const key = v.nombre_vendedor;
+        if (!vMap[key]) {
+          vMap[key] = { ...v, count: 1 };
+        } else {
+          vMap[key].tiempo_primera_respuesta = (vMap[key].tiempo_primera_respuesta || 0) + (v.tiempo_primera_respuesta || 0);
+          vMap[key].tiempo_promedio_respuesta = (vMap[key].tiempo_promedio_respuesta || 0) + (v.tiempo_promedio_respuesta || 0);
+          vMap[key].count += 1;
+        }
+      });
+      const processedVendedores = Object.values(vMap).map(v => ({
+        ...v,
+        tiempo_primera_respuesta: v.tiempo_primera_respuesta !== null ? Math.round(v.tiempo_primera_respuesta / v.count) : null,
+        tiempo_promedio_respuesta: v.tiempo_promedio_respuesta !== null ? Math.round(v.tiempo_promedio_respuesta / v.count) : null,
+      })) as VendedorRow[];
 
       return {
         metrics: {
-          totalConsultas: consultas_totales,
-          totalDerivaciones: derivaciones_totales,
+          leadsRecibidos: leads_recibidos,
+          leadsPerdidosHumano: leads_perdidos_vendedor,
+          leadsPerdidosIA: leads_perdidos_ia,
+          derivacionesWhatsApp: derivaciones_totales,
           conversionRate: porcentaje_conversion,
-          leadsNoDerivedByAI: leads_perdidos_ia,
+          derivacionesTipo: [
+            { tipo: "Automáticas (IA)", valor: derivaciones_por_ia, color: "#4DD0E1" },
+            { tipo: "Manuales", valor: derivaciones_manuales, color: "#64B5F6" },
+          ],
+          derivacionesIA: [
+            { tipo: "Seguimiento 1", valor: derivacion_primer_seguimientoIA, color: "#4DD0E1" },
+            { tipo: "Seguimiento 2", valor: derivacion_segundo_seguimientoIA, color: "#64B5F6" }
+          ],
           consultasPorCanal: [
             { canal: "WhatsApp", valor: consultas_whatsapp, color: "#4DD0E1" },
             { canal: "Instagram", valor: consultas_instagram, color: "#64B5F6" },
             { canal: "Messenger", valor: consultas_messenger, color: "#1a80ff" },
           ],
-          derivacionesTipo: [
-            { tipo: "Automáticas (IA)", valor: derivaciones_por_ia, color: "#4DD0E1" },
-            { tipo: "Manuales", valor: derivaciones_manuales, color: "#64B5F6" },
-          ]
         },
-        vendedores: (vendedores || []) as VendedorRow[],
+        vendedores: processedVendedores,
         topVehiculos: filteredVehiculos as VehiculoSolicitadoRow[],
       };
     },

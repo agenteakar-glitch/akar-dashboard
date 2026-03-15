@@ -1,0 +1,17 @@
+- ⁠Le faltan estas metricas al dashboard:
+1. Total de leads marcados con la etiqueta de perdidos
+2. Leads recibidos en el mes
+3. conversion de lead atendidos y leads derivados
+4. Del total de derivaciones, cuantas de ellas fueron logradas gracias a seguimientos de la IA y en que numero de seguimiento (1 o 2) → Fala agregar al dashboard
+
+Revisa las tablas en postgres y encontraras las nuevas propiedades.
+
+-Eliminar total consultas en el mes.
+
+-Modificar derivaciones logradas, debe ser especificas de whatsapp.  
+
+-Tasa de conversion ahora debe calcular segun los leads atendidos en el mes y los derivados.
+
+-Adaptar la vista para pantallas menos anchas.
+
+-las metricas de vendedores debe aparecer solo una vez el vendedor y debe mostrar promedios y no datos especificos.

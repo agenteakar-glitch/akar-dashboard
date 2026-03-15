@@ -26,6 +26,70 @@ const Index = () => {
 
   const metrics = data?.metrics;
 
+  const renderKPIs = () => metrics ? (
+    <>
+      <KPICard
+        label="Leads recibidos por la ia (whatsapp)"
+        value={metrics.leadsRecibidos.toLocaleString()}
+        accentColor="#4DD0E1"
+        tooltipInfo="Total de leads que se registraron este mes y fueron atendidos por la IA."
+      />
+      <KPICard
+        label="Derivaciones WhatsApp"
+        value={metrics.derivacionesWhatsApp.toLocaleString()}
+        accentColor="#64B5F6"
+        tooltipInfo="Cantidad de leads transferidos a vendedores humanos."
+      />
+      <KPICard
+        label="Tasa de Conversión"
+        value={`${metrics.conversionRate}%`}
+        accentColor="#1a80ff"
+        tooltipInfo="Porcentaje de derivaciones exitosas del total de leads atendidos."
+      />
+      <KPICard
+        label={<>Total Leads Perdidos <span className="font-bold text-foreground">humano</span></>}
+        value={metrics.leadsPerdidosHumano.toLocaleString()}
+        accentColor="#e67700"
+        tooltipInfo="Total de leads etiquetados como perdidos por vendedores."
+      />
+      <KPICard
+        label={<>Total Leads Perdidos <span className="font-bold text-foreground">IA</span></>}
+        value={metrics.leadsPerdidosIA.toLocaleString()}
+        accentColor="#e67700"
+        tooltipInfo="Total de leads que luego de dos seguimientos hechos por la IA no lograron ser derivados a un vendedor."
+      />
+    </>
+  ) : null;
+
+  const renderCharts = () => metrics ? (
+    <>
+      <DonutChart
+        title="Consultas por Canal"
+        data={metrics.consultasPorCanal}
+        centerValue={metrics.leadsRecibidos.toLocaleString()}
+        centerLabel="recibidos"
+        tooltipInfo="Distribución de los leads ingresados agrupados por el canal de origen."
+      />
+      <DonutChart
+        title="Derivaciones: IA vs Manual"
+        data={metrics.derivacionesTipo}
+        centerValue={metrics.derivacionesWhatsApp.toLocaleString()}
+        centerLabel="totales"
+        onHoverSegment={(index) => setHighlightIA(index === 0)}
+        tooltipInfo="Comparativa entre leads derivados automáticamente o manualmente."
+      />
+      <DonutChart
+        title="Derivaciones IA (Seguimientos)"
+        data={metrics.derivacionesIA}
+        centerValue={(
+          metrics.derivacionesTipo?.find((t: any) => t.tipo === "Automáticas (IA)")?.valor || 0
+        ).toLocaleString()}
+        centerLabel="por IA"
+        tooltipInfo="Muestra en qué etapa de seguimiento automático la IA logró derivar el lead."
+      />
+    </>
+  ) : null;
+
   return (
     <div className="flex min-h-screen bg-background">
       <div className="flex-1 flex flex-col min-w-0">
@@ -35,62 +99,47 @@ const Index = () => {
         />
 
         <main className="flex-1 p-6 lg:p-8 space-y-6 overflow-auto">
-          {/* Fila 1 – KPIs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {isLoading ? (
-              Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)
-            ) : metrics ? (
-              <>
-                <KPICard
-                  label="Total Consultas del Mes"
-                  value={metrics.totalConsultas.toLocaleString()}
-                  sparkData={[]} // No hay sparkdata real aún en el esquema provisto
-                  accentColor="#4DD0E1"
-                />
-                <KPICard
-                  label="Derivaciones Logradas"
-                  value={metrics.totalDerivaciones.toLocaleString()}
-                  sparkData={[]}
-                  accentColor="#64B5F6"
-                />
-                <KPICard
-                  label="Tasa de Conversión"
-                  value={`${metrics.conversionRate}%`}
-                  sparkData={[]}
-                  accentColor="#1a80ff"
-                />
-                <KPICard
-                  label="Leads No Derivados (IA)"
-                  value={metrics.leadsNoDerivedByAI.toLocaleString()}
-                  sparkData={[]}
-                  accentColor="#e67700"
-                />
-              </>
-            ) : null}
+          {/* Diseño Responsivo (Pantallas < 1200px / < xl breakpoint) */}
+          <div className="xl:hidden grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <div className="space-y-6">
+              {isLoading ? (
+                Array(3).fill(0).map((_, i) => <Skeleton key={`left-${i}`} className="h-[400px] w-full rounded-2xl" />)
+              ) : renderCharts()}
+            </div>
+            <div className="space-y-4">
+              {isLoading ? (
+                <>
+                  {Array(5).fill(0).map((_, i) => <Skeleton key={`right-kpi-${i}`} className="h-32 w-full rounded-2xl" />)}
+                  <Skeleton className="h-[300px] w-full rounded-2xl mt-6" />
+                </>
+              ) : (
+                <>
+                  {renderKPIs()}
+                  <div className="pt-2">
+                    <TopVehiculos vehiculos={data?.topVehiculos || []} />
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
-          {/* Fila 2 – Gráficos */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {isLoading ? (
-              Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-64 w-full rounded-2xl" />)
-            ) : metrics ? (
-              <>
-                <DonutChart
-                  title="Consultas por Canal"
-                  data={metrics.consultasPorCanal}
-                  centerValue={metrics.totalConsultas.toLocaleString()}
-                  centerLabel="consultas"
-                />
-                <DonutChart
-                  title="Derivaciones: IA vs Manual"
-                  data={metrics.derivacionesTipo}
-                  centerValue={metrics.totalDerivaciones.toLocaleString()}
-                  centerLabel="derivaciones"
-                  onHoverSegment={(index) => setHighlightIA(index === 0)}
-                />
-                <TopVehiculos vehiculos={data.topVehiculos} />
-              </>
-            ) : null}
+          {/* Diseño Original Escritorio (Pantallas >= 1280px / xl breakpoint) */}
+          <div className="hidden xl:block space-y-6">
+            <div className="grid grid-cols-5 gap-4">
+              {isLoading ? (
+                Array(5).fill(0).map((_, i) => <Skeleton key={`kpi-desk-${i}`} className="h-32 w-full rounded-2xl" />)
+              ) : renderKPIs()}
+            </div>
+            <div className="grid grid-cols-4 gap-4">
+              {isLoading ? (
+                Array(4).fill(0).map((_, i) => <Skeleton key={`chart-desk-${i}`} className="h-64 w-full rounded-2xl" />)
+              ) : (
+                <>
+                  {renderCharts()}
+                  <TopVehiculos vehiculos={data?.topVehiculos || []} />
+                </>
+              )}
+            </div>
           </div>
 
           {isLoading ? (
