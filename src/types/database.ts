@@ -11,7 +11,7 @@ export type DashboardRow = {
   consultas_messenger: number;
   derivacion_primer_seguimientoIA: number | null;
   derivacion_segundo_seguimientoIA: number | null;
-  lead_recibidos_ia: number | null;
+  lead_recibido_ia: number | null;
   creado_en: string;
   actualizado_en: string;
 };

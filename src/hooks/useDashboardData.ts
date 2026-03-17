@@ -57,26 +57,25 @@ export const useDashboardData = (periodo: string = '2025-03-01') => {
       const derivaciones_totales = d?.derivaciones_totales || 0;
       const leads_perdidos_ia = d?.leads_perdidos_ia || 0;
       const leads_perdidos_vendedor = d?.leads_perdidos_vendedor || 0;
-      const derivacion_primer_seguimientoIA = d?.derivacion_primer_seguimientoIA || 0;
-      const derivacion_segundo_seguimientoIA = d?.derivacion_segundo_seguimientoIA || 0;
-      const lead_recibidos_ia = d?.lead_recibidos_ia || 0;
+      const derivacion_primer_seguimientoIA = Number(d?.derivacion_primer_seguimientoIA) || 0;
+      const derivacion_segundo_seguimientoIA = Number(d?.derivacion_segundo_seguimientoIA) || 0;
+      const lead_recibidos_ia = Number(d?.lead_recibido_ia) || 0;
 
       // Nuevas métricas
       // 1. Total leads marcados con etiqueta perdidos
       const total_leads_perdidos = leads_perdidos_ia + leads_perdidos_vendedor;
       
-      // 2. Leads recibidos en el mes
-      const leads_recibidos = lead_recibidos_ia;
+      // 2. Leads recibidos en el mes (Suma de todos los canales)
+      const leads_recibidos = consultas_whatsapp + consultas_instagram + consultas_messenger;
 
-      // 3. Tasa de conversión (leads atendidos vs derivaciones)
-      const leads_atendidos = leads_recibidos; // Consideramos "atendidos" al total de recibidos
-      const porcentaje_conversion = leads_atendidos > 0 
-        ? parseFloat(((derivaciones_totales / leads_atendidos) * 100).toFixed(2)) 
-        : 0;
-        
       // Recuperar IA vs Manual
       const derivaciones_por_ia = d?.derivaciones_por_ia || 0;
       const derivaciones_manuales = derivaciones_totales - derivaciones_por_ia;
+
+      // 3. Tasa de conversión (leads atendidos por IA vs derivaciones por IA)
+      const porcentaje_conversion = lead_recibidos_ia > 0 
+        ? parseFloat(((derivaciones_por_ia / lead_recibidos_ia) * 100).toFixed(2)) 
+        : 0;
 
       // 9. Métricas de vendedores: mostrar una sola vez con promedios
       type GroupedVendedor = VendedorRow & { count: number };
@@ -99,7 +98,8 @@ export const useDashboardData = (periodo: string = '2025-03-01') => {
 
       return {
         metrics: {
-          leadsRecibidos: leads_recibidos,
+          leadsTotales: leads_recibidos, // Suma total de todos los canales
+          leadsRecibidosIA: lead_recibidos_ia, // Especificamente de whatsapp/ia
           leadsPerdidosHumano: leads_perdidos_vendedor,
           leadsPerdidosIA: leads_perdidos_ia,
           derivacionesWhatsApp: derivaciones_totales,
