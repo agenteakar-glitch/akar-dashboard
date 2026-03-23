@@ -37,8 +37,9 @@ export const useDashboardData = (periodo: string = '2025-03-01') => {
       // Filtro flexible: capturamos el mes tanto si está en la posición de mes como en la de día
       // o si la fecha de creación (creado_en) coincide con el mes buscado.
       const filteredVehiculos = (allVehiculos || []).filter(v => {
+        if (!v.periodo) return false;
         const parts = v.periodo.split('-');
-        const createdDate = new Date(v.creado_en);
+        const createdDate = new Date(v.creado_en || v.periodo);
         const createdMonth = (createdDate.getUTCMonth() + 1).toString().padStart(2, '0');
         const createdYear = createdDate.getUTCFullYear().toString();
 
@@ -46,7 +47,22 @@ export const useDashboardData = (periodo: string = '2025-03-01') => {
         const matchInCreated = (createdYear === year && createdMonth === month);
 
         return matchInPeriodo || matchInCreated;
-      }).slice(0, 3);
+      });
+
+      // Agrupar por vehiculo (por ejemplo, "Chevrolet Onix") y sumar consultas
+      const vehiculosAgrupados = filteredVehiculos.reduce((acc, v) => {
+        const key = `${v.marca}-${v.modelo}`;
+        if (!acc[key]) {
+          acc[key] = { ...v, cantidad_consultas: 0 };
+        }
+        acc[key].cantidad_consultas += Number(v.cantidad_consultas) || 1;
+        return acc;
+      }, {} as Record<string, VehiculoSolicitadoRow>);
+
+      // Obtener el Top 3
+      const topVehiculos = (Object.values(vehiculosAgrupados) as VehiculoSolicitadoRow[])
+        .sort((a, b) => b.cantidad_consultas - a.cantidad_consultas)
+        .slice(0, 3);
 
       const d = dashboard as DashboardRow | null;
 
@@ -119,7 +135,7 @@ export const useDashboardData = (periodo: string = '2025-03-01') => {
           ],
         },
         vendedores: processedVendedores,
-        topVehiculos: filteredVehiculos as VehiculoSolicitadoRow[],
+        topVehiculos: topVehiculos,
       };
     },
   });
