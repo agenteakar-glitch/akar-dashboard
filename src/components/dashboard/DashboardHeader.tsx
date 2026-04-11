@@ -1,11 +1,18 @@
 import { Car, ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DashboardHeaderProps {
   currentPeriod: string;
+  availablePeriods?: string[];
   onPeriodChange?: (period: string) => void;
 }
 
-export function DashboardHeader({ currentPeriod, onPeriodChange }: DashboardHeaderProps) {
+export function DashboardHeader({ currentPeriod, availablePeriods = [], onPeriodChange }: DashboardHeaderProps) {
   // Formatear periodo para visualización (ej: 2026-03-09 -> Marzo 2026)
   const formatPeriod = (p: string) => {
     try {
@@ -36,16 +43,29 @@ export function DashboardHeader({ currentPeriod, onPeriodChange }: DashboardHead
           <h1 className="font-display text-xl font-bold text-foreground tracking-tight">Dashboard</h1>
           <div className="flex items-center gap-1 text-xs text-muted-foreground font-body">
             <span>Actividad de</span>
-            <button 
-              className="inline-flex items-center gap-1 text-primary font-medium hover:underline capitalize"
-              onClick={() => {
-                // Aquí en el futuro se abrirá un Dropdown para seleccionar el mes.
-                // Por ahora no cambia de fecha ya que solo se ven meses a partir de marzo 2026.
-              }}
-            >
-              {formatPeriod(currentPeriod)}
-              <ChevronDown className="w-3 h-3" />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button 
+                  className="inline-flex items-center gap-1 text-primary font-medium hover:underline capitalize outline-none"
+                >
+                  {formatPeriod(currentPeriod)}
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+              </DropdownMenuTrigger>
+              {availablePeriods.length > 0 && (
+                <DropdownMenuContent align="start">
+                  {availablePeriods.map((period) => (
+                    <DropdownMenuItem 
+                      key={period}
+                      onClick={() => onPeriodChange?.(period)}
+                      className={period === currentPeriod ? "bg-accent/50 font-medium capitalize" : "capitalize"}
+                    >
+                      {formatPeriod(period)}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              )}
+            </DropdownMenu>
           </div>
         </div>
       </div>

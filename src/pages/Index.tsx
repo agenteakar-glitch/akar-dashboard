@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useAvailablePeriods } from "@/hooks/useAvailablePeriods";
 
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { KPICard } from "@/components/dashboard/KPICard";
@@ -10,8 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
   const [highlightIA, setHighlightIA] = useState(false);
-  const [periodo, setPeriodo] = useState('2026-03-09'); // Único mes con datos actualmente
+  const [periodo, setPeriodo] = useState('2026-03-09');
   const { data, isLoading, error } = useDashboardData(periodo);
+  const { data: availablePeriods } = useAvailablePeriods();
 
   if (error) {
     return (
@@ -95,6 +97,7 @@ const Index = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader 
           currentPeriod={periodo} 
+          availablePeriods={availablePeriods || ['2026-03-09']}
           onPeriodChange={setPeriodo}
         />
 
