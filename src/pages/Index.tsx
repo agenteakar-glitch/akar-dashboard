@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAvailablePeriods } from "@/hooks/useAvailablePeriods";
 
@@ -11,9 +11,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
   const [highlightIA, setHighlightIA] = useState(false);
-  const [periodo, setPeriodo] = useState('2026-03-09');
-  const { data, isLoading, error } = useDashboardData(periodo);
   const { data: availablePeriods } = useAvailablePeriods();
+  const [periodo, setPeriodo] = useState<string>('');
+
+  useEffect(() => {
+    if (availablePeriods && availablePeriods.length > 0 && !periodo) {
+      setPeriodo(availablePeriods[0]); // El más reciente por defecto
+    }
+  }, [availablePeriods, periodo]);
+
+  const { data, isLoading: isDashboardLoading, error } = useDashboardData(periodo || '2026-03-09');
+  const isLoading = isDashboardLoading || !periodo;
 
   if (error) {
     return (

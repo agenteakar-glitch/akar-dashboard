@@ -5,6 +5,7 @@ import { DashboardRow, VendedorRow, VehiculoSolicitadoRow } from '@/types/databa
 export const useDashboardData = (periodo: string = '2025-03-01') => {
   return useQuery({
     queryKey: ['dashboardData', periodo],
+    enabled: !!periodo,
     queryFn: async () => {
       // 1. Obtener datos del dashboard para el periodo
       // Usamos .maybeSingle() para evitar el error 406 PGRST116 si no hay datos
