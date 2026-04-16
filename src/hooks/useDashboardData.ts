@@ -95,23 +95,62 @@ export const useDashboardData = (periodo: string = '2025-03-01') => {
         : 0;
 
       // 9. Métricas de vendedores: mostrar una sola vez con promedios
-      type GroupedVendedor = VendedorRow & { count: number };
+      type GroupedVendedor = VendedorRow & { count_primera: number; count_promedio: number };
       const vMap: Record<string, GroupedVendedor> = {};
       (vendedores || []).forEach(v => {
-        const key = v.nombre_vendedor;
+        // Normalizar nombre: eliminar paréntesis, guiones y espacios extra para agrupar mejor
+        const key = v.nombre_vendedor
+          .replace(/\s+/g, ' ')           // Colapsar espacios extra
+          .replace(/\(.*\)/g, '')         // Eliminar paréntesis y su contenido
+          .replace(/-.*/g, '')            // Eliminar guiones y lo que sigue
+          .trim()
+          .toLowerCase();
+
         if (!vMap[key]) {
-          vMap[key] = { ...v, count: 1 };
+          vMap[key] = { 
+            ...v, 
+            count_primera: v.tiempo_primera_respuesta !== null ? 1 : 0,
+            count_promedio: v.tiempo_promedio_respuesta !== null ? 1 : 0,
+            tiempo_primera_respuesta: v.tiempo_primera_respuesta || 0,
+            tiempo_promedio_respuesta: v.tiempo_promedio_respuesta || 0
+          };
         } else {
-          vMap[key].tiempo_primera_respuesta = (vMap[key].tiempo_primera_respuesta || 0) + (v.tiempo_primera_respuesta || 0);
-          vMap[key].tiempo_promedio_respuesta = (vMap[key].tiempo_promedio_respuesta || 0) + (v.tiempo_promedio_respuesta || 0);
-          vMap[key].count += 1;
+          if (v.tiempo_primera_respuesta !== null) {
+            vMap[key].tiempo_primera_respuesta = (vMap[key].tiempo_primera_respuesta || 0) + v.tiempo_primera_respuesta;
+            vMap[key].count_primera += 1;
+          }
+          if (v.tiempo_promedio_respuesta !== null) {
+            vMap[key].tiempo_promedio_respuesta = (vMap[key].tiempo_promedio_respuesta || 0) + v.tiempo_promedio_respuesta;
+            vMap[key].count_promedio += 1;
+          }
         }
       });
       const processedVendedores = Object.values(vMap).map(v => ({
         ...v,
-        tiempo_primera_respuesta: v.tiempo_primera_respuesta !== null ? Math.round(v.tiempo_primera_respuesta / v.count) : null,
-        tiempo_promedio_respuesta: v.tiempo_promedio_respuesta !== null ? Math.round(v.tiempo_promedio_respuesta / v.count) : null,
-      })) as VendedorRow[];
+        tiempo_primera_respuesta: v.count_primera > 0 ? Math.round(v.tiempo_primera_respuesta / v.count_primera) : null,
+        tiempo_promedio_respuesta: v.count_promedio > 0 ? Math.round(v.tiempo_promedio_respuesta / v.count_promedio) : null,
+      }))
+        .sort((a, b) => {
+          // Obtener el valor más bajo disponible para cada uno (ignorando nulos)
+          const getBestTime = (v: VendedorRow) => {
+            const t1 = v.tiempo_primera_respuesta;
+            const t2 = v.tiempo_promedio_respuesta;
+            if (t1 === null && t2 === null) return Infinity;
+            if (t1 === null) return t2 as number;
+            if (t2 === null) return t1 as number;
+            return Math.min(t1, t2);
+          };
+
+          const scoreA = getBestTime(a);
+          const scoreB = getBestTime(b);
+
+          if (scoreA === scoreB) {
+            // Si empatan (ej. ambos Infinity), mantener orden alfabético
+            return a.nombre_vendedor.localeCompare(b.nombre_vendedor);
+          }
+          
+          return scoreA - scoreB;
+        }) as VendedorRow[];
 
       return {
         metrics: {

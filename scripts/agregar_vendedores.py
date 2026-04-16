@@ -67,8 +67,19 @@ except Exception as e:
 payload = []
 base_id = 990000
 
+def normalize_name(name):
+    # Eliminar paréntesis, guiones y espacios extra para comparación
+    import re
+    res = re.sub(r'\s+', ' ', name)
+    res = re.sub(r'\(.*\)', '', res)
+    res = re.sub(r'-.*', '', res)
+    return res.strip().lower()
+
+# Normalizar nombres existentes
+existentes_norm = {normalize_name(n) for n in existentes_nombres}
+
 for i, nombre in enumerate(vendedores):
-    if nombre not in existentes_nombres:
+    if normalize_name(nombre) not in existentes_norm:
         while base_id in existentes_chatwoot_ids:
             base_id += 1
         
