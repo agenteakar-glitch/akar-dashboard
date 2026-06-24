@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 interface DonutChartProps {
   title: string;
-  data: readonly { readonly canal?: string; readonly tipo?: string; readonly valor: number; readonly color: string }[];
+  data: readonly { readonly canal?: string; readonly tipo?: string; readonly valor: number; readonly color: string; readonly porcentaje?: string }[];
   centerValue: string | number;
   centerLabel: string;
   onHoverSegment?: (index: number | null) => void;
@@ -77,6 +77,9 @@ export function DonutChart({ title, data, centerValue, centerLabel, onHoverSegme
             <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
             <span>{(entry as any).canal || (entry as any).tipo}</span>
             <span className="font-display font-semibold text-foreground">{entry.valor}</span>
+            {(entry as any).porcentaje && (
+              <span className="font-bold ml-1" style={{ color: entry.color }}>({(entry as any).porcentaje}%)</span>
+            )}
           </div>
         ))}
       </div>

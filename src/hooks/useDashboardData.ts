@@ -152,21 +152,32 @@ export const useDashboardData = (periodo: string = '2025-03-01') => {
           return scoreA - scoreB;
         }) as VendedorRow[];
 
+      const derivaciones_sin_seguimiento = Math.max(0, derivaciones_por_ia - derivacion_primer_seguimientoIA - derivacion_segundo_seguimientoIA);
+      const getPorcentajeIA = (valor: number) => derivaciones_por_ia > 0 ? ((valor / derivaciones_por_ia) * 100).toFixed(1) : "0.0";
+
+      const total_perdidos = leads_perdidos_vendedor + leads_perdidos_ia;
+      const leads_avanzaron = Math.max(0, consultas_whatsapp - total_perdidos);
+      const getPorcentajeAvance = (valor: number) => consultas_whatsapp > 0 ? ((valor / consultas_whatsapp) * 100).toFixed(1) : "0.0";
+
       return {
         metrics: {
           leadsTotales: leads_recibidos, // Suma total de todos los canales
-          leadsRecibidosIA: lead_recibidos_ia, // Especificamente de whatsapp/ia
+          leadsRecibidosIA: consultas_whatsapp, // Especificamente de whatsapp
           leadsPerdidosHumano: leads_perdidos_vendedor,
           leadsPerdidosIA: leads_perdidos_ia,
           derivacionesWhatsApp: derivaciones_totales,
           conversionRate: porcentaje_conversion,
-          derivacionesTipo: [
-            { tipo: "Automáticas (IA)", valor: derivaciones_por_ia, color: "#4DD0E1" },
-            { tipo: "Manuales", valor: derivaciones_manuales, color: "#64B5F6" },
+          derivacionesIAValor: derivaciones_por_ia,
+          derivacionesManualesValor: derivaciones_manuales,
+          leadsAvanzadosValor: leads_avanzaron,
+          leadsAvanzadosBreakdown: [
+            { tipo: "Avanzaron", valor: leads_avanzaron, color: "#4DD0E1", porcentaje: getPorcentajeAvance(leads_avanzaron) },
+            { tipo: "Perdidos", valor: total_perdidos, color: "#e67700", porcentaje: getPorcentajeAvance(total_perdidos) }
           ],
           derivacionesIA: [
-            { tipo: "Seguimiento 1", valor: derivacion_primer_seguimientoIA, color: "#4DD0E1" },
-            { tipo: "Seguimiento 2", valor: derivacion_segundo_seguimientoIA, color: "#64B5F6" }
+            { tipo: "Sin seguimiento", valor: derivaciones_sin_seguimiento, color: "#1a80ff", porcentaje: getPorcentajeIA(derivaciones_sin_seguimiento) },
+            { tipo: "Seguimiento 1", valor: derivacion_primer_seguimientoIA, color: "#4DD0E1", porcentaje: getPorcentajeIA(derivacion_primer_seguimientoIA) },
+            // Seguimiento 2 se oculta por solicitud del usuario
           ],
           consultasPorCanal: [
             { canal: "WhatsApp", valor: consultas_whatsapp, color: "#4DD0E1" },

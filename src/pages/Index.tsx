@@ -4,6 +4,7 @@ import { useAvailablePeriods } from "@/hooks/useAvailablePeriods";
 
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { KPICard } from "@/components/dashboard/KPICard";
+import { DerivationsSummaryCard } from "@/components/dashboard/DerivationsSummaryCard";
 import { DonutChart } from "@/components/dashboard/DonutChart";
 import { TopVehiculos } from "@/components/dashboard/TopVehiculos";
 import { VendedoresTable } from "@/components/dashboard/VendedoresTable";
@@ -38,23 +39,11 @@ const Index = () => {
 
   const renderKPIs = () => metrics ? (
     <>
-      <KPICard
-        label="Leads recibidos por la ia (whatsapp)"
-        value={metrics.leadsRecibidosIA.toLocaleString()}
-        accentColor="#4DD0E1"
-        tooltipInfo="Total de leads que se registraron este mes y fueron atendidos por la IA."
-      />
-      <KPICard
-        label="Derivaciones WhatsApp"
-        value={metrics.derivacionesWhatsApp.toLocaleString()}
-        accentColor="#64B5F6"
-        tooltipInfo="Cantidad de leads derivados para una asignación de vendedor"
-      />
-      <KPICard
-        label="Tasa de Conversión"
-        value={`${metrics.conversionRate}%`}
-        accentColor="#1a80ff"
-        tooltipInfo="Porcentaje de derivaciones exitosas logradas por la IA en base a todos los leads recibidos por whatsapp"
+      <DerivationsSummaryCard 
+        totalLeadsWhatsApp={metrics.leadsRecibidosIA}
+        derivacionesIA={metrics.derivacionesIAValor}
+        derivacionesManuales={metrics.derivacionesManualesValor}
+        derivacionesTotales={metrics.derivacionesWhatsApp}
       />
       <KPICard
         label={<>Total Leads Perdidos <span className="font-bold text-foreground">humano</span></>}
@@ -74,28 +63,25 @@ const Index = () => {
   const renderCharts = () => metrics ? (
     <>
       <DonutChart
-        title="Consultas por Canal"
+        title="Leads recibidos por canal"
         data={metrics.consultasPorCanal}
         centerValue={metrics.leadsTotales.toLocaleString()}
         centerLabel="recibidos"
         tooltipInfo="Del total de leads ingresados al crm, cuántos entraron en cada red social"
       />
       <DonutChart
-        title="Derivaciones: IA vs Manual"
-        data={metrics.derivacionesTipo}
-        centerValue={metrics.derivacionesWhatsApp.toLocaleString()}
-        centerLabel="totales"
-        onHoverSegment={(index) => setHighlightIA(index === 0)}
-        tooltipInfo="Muestra una comparativa entre leads que lograron ser derivados por la IA con éxito y leads que fueron derivados manualmente porque hubo un error"
+        title="Leads que avanzaron"
+        data={metrics.leadsAvanzadosBreakdown}
+        centerValue={metrics.leadsAvanzadosValor.toLocaleString()}
+        centerLabel="avanzaron"
+        tooltipInfo="Muestra de forma indirecta los leads que avanzaron en el proceso de venta (Total ingresados por WA menos los leads perdidos)"
       />
       <DonutChart
         title="Derivaciones IA (Seguimientos)"
         data={metrics.derivacionesIA}
-        centerValue={(
-          metrics.derivacionesTipo?.find((t: any) => t.tipo === "Automáticas (IA)")?.valor || 0
-        ).toLocaleString()}
-        centerLabel="por IA"
-        tooltipInfo="Muestra el total de derivaciones logradas gracias a seguimientos y en qué número de seguimiento"
+        centerValue={metrics.derivacionesIAValor.toLocaleString()}
+        centerLabel="totales por IA"
+        tooltipInfo="Muestra el total de derivaciones logradas por IA y desglosa cuántas requirieron seguimientos adicionales"
       />
     </>
   ) : null;
